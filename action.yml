@@ -1,6 +1,6 @@
-name: zCloud Deploy
-author: zCloud <support@zcloud.ws>
-description: GitHub action to deploy content on zCloud platform.
+name: QuaveONE Deploy
+author: QuaveONE <support@zcloud.ws>
+description: GitHub action to deploy content on QuaveONE platform.
 branding:
   icon: upload-cloud
   color: green
