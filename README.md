@@ -1,6 +1,6 @@
-# zCloud deploy action
+# Quave One Deploy Action
 
-This action deploy content on [zCloud](https://www.zcloud.ws) platform
+This action deploy content on [Quave One](https://www.quave.one) platform
 
 ## Inputs
 
@@ -43,7 +43,7 @@ This action deploy content on [zCloud](https://www.zcloud.ws) platform
 ## Example usage
 
 ```yaml
-uses: zcloud-ws/zcloud-deploy-action@main
+uses: quaveone/quaveone-deploy-action@main
 with:
   user-token: USER_TOKEN
   env: ENV_NAME
@@ -51,7 +51,7 @@ with:
   cli-extra-args: "--env-var ENV1=VAL1 --env-var ENV2=VAL2"
 ```
 
-# zCloud CLI
+# Quave One CLI
 
-- [Documentation](https://docs.zcloud.ws/docs/cli/)
-- [Docker](https://hub.docker.com/r/zcloudws/zcloud-cli)
+- [Documentation](https://docs.quave.one/docs/cli/)
+- [Docker](https://hub.docker.com/r/quaveone/quaveone-cli)
