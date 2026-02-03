@@ -1,6 +1,6 @@
-name: zCloud Deploy
-author: zCloud <support@zcloud.ws>
-description: GitHub action to deploy content on zCloud platform.
+name: QuaveONE Deploy
+author: QuaveONE <support@zcloud.ws>
+description: GitHub action to deploy content on QuaveONE platform.
 branding:
   icon: upload-cloud
   color: green
@@ -39,17 +39,17 @@ inputs:
     required: false
 runs:
   using: 'docker'
-  image: docker://zcloudws/zcloud-cli:v1.0.28
+  image: docker://quaveone/quaveone-cli:v1.0.28
   env:
-    ZCLOUD_USER_TOKEN: ${{ inputs.user-token }}
-    ZCLOUD_ENV_TOKEN: ${{ inputs.env-token }}
-    ZCLOUD_ENV_NAME: ${{ inputs.env }}
-    ZCLOUD_SRC_DIR: ${{ inputs.dir }}
-    ZCLOUD_IMAGE: ${{ inputs.image }}
-    ZCLOUD_APP_SLUG: ${{ inputs.app }}
-    ZCLOUD_COPY_ENV_VARS_FROM: ${{ inputs.copy-env-vars-from }}
-    ZCLOUD_API_CLI_URI: ${{ inputs.api-cli-uri }}
+    QUAVEONE_USER_TOKEN: ${{ inputs.user-token }}
+    QUAVEONE_ENV_TOKEN: ${{ inputs.env-token }}
+    QUAVEONE_ENV_NAME: ${{ inputs.env }}
+    QUAVEONE_SRC_DIR: ${{ inputs.dir }}
+    QUAVEONE_IMAGE: ${{ inputs.image }}
+    QUAVEONE_APP_SLUG: ${{ inputs.app }}
+    QUAVEONE_COPY_ENV_VARS_FROM: ${{ inputs.copy-env-vars-from }}
+    QUAVEONE_API_CLI_URI: ${{ inputs.api-cli-uri }}
   entrypoint: sh
   args:
     - -c
-    - 'zcloud deploy ${{ inputs.cli-extra-args }}'
+    - 'quaveone deploy ${{ inputs.cli-extra-args }}'
