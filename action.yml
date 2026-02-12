@@ -39,7 +39,7 @@ inputs:
     required: false
 runs:
   using: 'docker'
-  image: docker://quaveone/quaveone-cli:v1.0.29
+  image: docker://quaveone/quaveone-cli:1.0.29
   env:
     QUAVEONE_USER_TOKEN: ${{ inputs.user-token }}
     QUAVEONE_ENV_TOKEN: ${{ inputs.env-token }}
