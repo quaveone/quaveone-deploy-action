@@ -55,3 +55,18 @@ with:
 
 - [Documentation](https://docs.quave.one/docs/cli/)
 - [Docker](https://hub.docker.com/r/quaveone/quaveone-cli)
+
+
+## Release process
+
+Customer examples use `quaveone/quaveone-deploy-action@main`, so the `main` branch must always use the latest stable Quave ONE CLI Docker image.
+
+The normal path is automatic: the `quaveone/quaveone-client-utils` Release workflow updates this repo after a stable CLI release when `publish_docker=true` and `set_latest=true`.
+
+For manual repair or a standalone action release, run this repository's **Release Deploy Action** workflow:
+
+```shell
+gh workflow run release.yml --repo quaveone/quaveone-deploy-action --ref main -f version=v1.0.35
+```
+
+The workflow updates `action.yml`, pushes `main`, creates the matching tag, and marks the matching GitHub Release as **Latest**. AI agents should follow `.agents/skills/release-deploy-action/SKILL.md` before declaring the action release complete.

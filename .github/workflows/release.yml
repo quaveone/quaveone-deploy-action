@@ -1,0 +1,100 @@
+name: Release Deploy Action
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "CLI/action version to publish, for example v1.0.35 or 1.0.35"
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Update action image, tag, and latest release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          INPUT_VERSION: ${{ inputs.version }}
+        run: |
+          set -euo pipefail
+
+          VERSION="$INPUT_VERSION"
+          case "$VERSION" in
+            v*) TAG="$VERSION"; VERSION_NUMBER="${VERSION#v}" ;;
+            *) VERSION_NUMBER="$VERSION"; TAG="v${VERSION}" ;;
+          esac
+          export VERSION_NUMBER
+
+          if [[ ! "$VERSION_NUMBER" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$ ]]; then
+            echo "::error::Version must look like vX.Y.Z or X.Y.Z; got $INPUT_VERSION."
+            exit 1
+          fi
+
+          python3 - <<'PY'
+          import os
+          import re
+          from pathlib import Path
+
+          version = os.environ["VERSION_NUMBER"]
+          path = Path("action.yml")
+          text = path.read_text()
+          new_text, count = re.subn(
+              r"docker://quaveone/quaveone-cli:[0-9]+\.[0-9]+\.[0-9]+(?:-[0-9A-Za-z.-]+)?",
+              f"docker://quaveone/quaveone-cli:{version}",
+              text,
+          )
+          if count != 1:
+              raise SystemExit(f"Expected exactly one CLI image reference in action.yml, replaced {count}")
+          path.write_text(new_text)
+          PY
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          if ! git diff --quiet -- action.yml; then
+            git add action.yml
+            git commit -m "Use Quave ONE CLI ${VERSION_NUMBER}"
+            git push origin HEAD:main
+          else
+            echo "action.yml already uses Quave ONE CLI ${VERSION_NUMBER}"
+          fi
+
+          HEAD_SHA="$(git rev-parse HEAD)"
+          git fetch origin main --tags
+
+          if git rev-parse "$TAG" >/dev/null 2>&1; then
+            EXISTING_SHA="$(git rev-list -n 1 "$TAG")"
+            if [[ "$EXISTING_SHA" != "$HEAD_SHA" ]]; then
+              echo "::error::Tag $TAG already exists at $EXISTING_SHA, expected $HEAD_SHA. Not moving release tags automatically."
+              exit 1
+            fi
+          else
+            git tag "$TAG" "$HEAD_SHA"
+            git push origin "$TAG"
+          fi
+
+          cat > /tmp/deploy-action-release-notes.md <<EOF_NOTES
+          Uses Quave ONE CLI ${VERSION_NUMBER}.
+
+          CLI release: https://github.com/quaveone/cli/releases/tag/${TAG}
+          EOF_NOTES
+
+          if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            gh release edit "$TAG" --repo "$GITHUB_REPOSITORY" --latest
+          else
+            gh release create "$TAG" \
+              --repo "$GITHUB_REPOSITORY" \
+              --target "$HEAD_SHA" \
+              --title "$TAG" \
+              --notes-file /tmp/deploy-action-release-notes.md \
+              --latest
+          fi

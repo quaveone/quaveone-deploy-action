@@ -1,0 +1,4 @@
+interface:
+  display_name: "Release Deploy Action"
+  short_description: "Sync deploy action to latest CLI"
+  default_prompt: "Release or repair the Quave ONE deploy action so main and latest match the latest CLI image."
