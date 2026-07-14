@@ -1,6 +1,6 @@
-name: Quave One Deploy
-author: Quave One <support@quave.one>
-description: GitHub action to deploy content on Quave One platform.
+name: Quave ONE Deploy
+author: Quave ONE <support@quave.one>
+description: GitHub Action to deploy source code or container images to Quave ONE.
 branding:
   icon: upload-cloud
   color: green
@@ -35,7 +35,7 @@ inputs:
     required: false
     default: ""
   cli-extra-args:
-    description: 'CLI extra arguments.'
+    description: 'Additional quaveone deploy arguments, such as --env-var, --command, --arg, --working-dir, --wait, or --clear-command.'
     required: false
 runs:
   using: 'docker'

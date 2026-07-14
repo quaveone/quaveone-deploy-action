@@ -1,6 +1,7 @@
-# Quave One Deploy Action
+# Quave ONE Deploy Action
 
-This action deploy content on [Quave One](https://www.quave.one) platform
+This action deploys source code or container images to
+[Quave ONE](https://www.quave.one).
 
 ## Inputs
 
@@ -38,7 +39,9 @@ This action deploy content on [Quave One](https://www.quave.one) platform
 
 ## `cli-extra-args`
 
-**Optional** CLI extra arguments.
+**Optional** Additional `quaveone deploy` arguments, including repeatable
+`--env-var` and `--arg` values, startup command overrides, wait options, and
+`--clear-command`.
 
 ## Example usage
 
@@ -51,7 +54,36 @@ with:
   cli-extra-args: "--env-var ENV1=VAL1 --env-var ENV2=VAL2"
 ```
 
-# Quave One CLI
+The same image can run a different long-lived process without an entrypoint
+script. Quote the complete value so spaces inside `--command` stay grouped;
+shell metacharacters still need normal shell escaping:
+
+```yaml
+uses: quaveone/quaveone-deploy-action@main
+with:
+  env-token: ${{ secrets.QUAVEONE_ENV_TOKEN }}
+  env: worker-production
+  image: ghcr.io/acme/app:sha
+  cli-extra-args: '--command "bun run start:worker" --wait'
+```
+
+For an image without `/bin/sh`, use direct execution and repeat `--arg`:
+
+```yaml
+cli-extra-args: >-
+  --command bun
+  --shell=false
+  --arg run
+  --arg start:worker
+  --working-dir /app
+  --wait
+```
+
+The override is saved on the Quave ONE environment and remains active when
+later deployments omit these flags. Pass `--clear-command` to restore the
+image's `ENTRYPOINT`, `CMD`, and working directory.
+
+# Quave ONE CLI
 
 - [Documentation](https://docs.quave.one/docs/cli/)
 - [Docker](https://hub.docker.com/r/quaveone/quaveone-cli)
