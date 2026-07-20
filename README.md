@@ -40,6 +40,35 @@ This action deploy content on [Quave One](https://www.quave.one) platform
 
 **Optional** CLI extra arguments.
 
+
+## Branch preview inputs
+
+Set `preview: "true"` to run `quaveone preview create` instead of `quaveone deploy`. The Action derives the preview branch from `GITHUB_HEAD_REF` or `GITHUB_REF_NAME`.
+
+| Input | Required when `preview=true` | Description |
+| --- | --- | --- |
+| `app` | Yes | App slug/name/id resolved by the CLI. |
+| `from` | Yes | Source env appEnvId, cliEnvName, or display name scoped to the app. |
+| `ttl-hours` | Yes | Absolute preview TTL in hours. |
+| `idle-hours` | No | Idle timeout in hours. |
+| `prevent-destroy` | No | Create the preview with Prevent destroy enabled. |
+| `delete-on-pr-close` | No | On a closed pull request, call `quaveone preview delete --env`. Use `env` as the stable preview env name/delete target. |
+
+Example:
+
+```yaml
+uses: quaveone/quaveone-deploy-action@main
+with:
+  user-token: ${{ secrets.QUAVEONE_USER_TOKEN }}
+  env: preview-${{ github.event.pull_request.number }}
+  app: my-app
+  preview: "true"
+  from: production
+  ttl-hours: "8"
+  idle-hours: "2"
+  delete-on-pr-close: "true"
+```
+
 ## Example usage
 
 ```yaml
