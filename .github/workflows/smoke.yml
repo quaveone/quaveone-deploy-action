@@ -1,6 +1,7 @@
 name: Smoke Deploy Action
 
 on:
+  pull_request:
   push:
     branches:
       - main
@@ -10,8 +11,8 @@ permissions:
   contents: read
 
 jobs:
-  action-main-loads:
-    name: Action main loads
+  local-action-metadata:
+    name: Load local action metadata
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -24,30 +25,75 @@ jobs:
             exit 1
           fi
 
-      - name: Local action reaches CLI
+      - name: Local deploy path reaches CLI
         id: local_deploy
         continue-on-error: true
         uses: ./
         with:
           env: smoke-env
 
-      - name: Assert local action failed only after loading
+      - name: Assert local deploy failed only after action loaded
         if: ${{ steps.local_deploy.outcome != 'failure' }}
         run: |
-          echo "Expected local smoke to fail because credentials are intentionally absent."
+          echo "Expected local deploy smoke to fail because credentials are intentionally absent."
           echo "Actual outcome: ${{ steps.local_deploy.outcome }}"
           exit 1
 
-      - name: Published main action reaches CLI
+      - name: Local preview path reaches CLI
+        id: local_preview
+        continue-on-error: true
+        uses: ./
+        with:
+          preview: "true"
+          env: preview-smoke
+          app: smoke-app
+          from: production
+          ttl-hours: "1"
+          idle-hours: "2"
+          prevent-destroy: "true"
+
+      - name: Assert local preview failed only after action loaded
+        if: ${{ steps.local_preview.outcome != 'failure' }}
+        run: |
+          echo "Expected local preview smoke to fail because credentials are intentionally absent."
+          echo "Actual outcome: ${{ steps.local_preview.outcome }}"
+          exit 1
+
+  published-main-metadata:
+    name: Load published main action metadata
+    if: ${{ github.event_name != 'pull_request' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Published main deploy path reaches CLI
         id: main_deploy
         continue-on-error: true
         uses: quaveone/quaveone-deploy-action@main
         with:
           env: smoke-env
 
-      - name: Assert published main action failed only after loading
+      - name: Assert published main deploy failed only after action loaded
         if: ${{ steps.main_deploy.outcome != 'failure' }}
         run: |
-          echo "Expected published main smoke to fail because credentials are intentionally absent."
+          echo "Expected published main deploy smoke to fail because credentials are intentionally absent."
           echo "Actual outcome: ${{ steps.main_deploy.outcome }}"
+          exit 1
+
+      - name: Published main preview path reaches CLI
+        id: main_preview
+        continue-on-error: true
+        uses: quaveone/quaveone-deploy-action@main
+        with:
+          preview: "true"
+          env: preview-smoke
+          app: smoke-app
+          from: production
+          ttl-hours: "1"
+          idle-hours: "2"
+          prevent-destroy: "true"
+
+      - name: Assert published main preview failed only after action loaded
+        if: ${{ steps.main_preview.outcome != 'failure' }}
+        run: |
+          echo "Expected published main preview smoke to fail because credentials are intentionally absent."
+          echo "Actual outcome: ${{ steps.main_preview.outcome }}"
           exit 1

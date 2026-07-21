@@ -1,6 +1,6 @@
-name: Quave One Deploy
-author: Quave One <support@quave.one>
-description: GitHub action to deploy content on Quave One platform.
+name: Quave ONE Deploy
+author: Quave ONE <support@quave.one>
+description: GitHub Action to deploy source code or container images to Quave ONE.
 branding:
   icon: upload-cloud
   color: green
@@ -12,10 +12,10 @@ inputs:
     description: 'Token to authenticate the app environment'
     required: false
   env:
-    description: 'Environment name to create or update'
+    description: 'Environment name to create, update, or use as the preview name/delete target'
     required: true
   dir:
-    description: 'Directory usage as source code to send to deploy (Optional, default value is current dir)'
+    description: 'Directory usage as the source code to send to deploy (Optional, default value is current dir)'
     required: false
     default: ""
   image:
@@ -23,23 +23,47 @@ inputs:
     required: false
     default: ""
   app:
-    description: 'Name of the app in which the environment will be created or updated (requires usage together with the --create argument)'
+    description: 'Name of the app in which the environment will be created, updated, or previewed'
     required: false
     default: ""
   copy-env-vars-from:
-    description: 'Name of the environment from which the env vars will be copied to the new environment (requires usage together with the --create argument)'
+    description: 'Name of the environment from which only env vars will be copied to the new environment (requires --create)'
     required: false
     default: ""
+  preview:
+    description: 'When true, run quaveone preview create instead of quaveone deploy'
+    required: false
+    default: "false"
+  from:
+    description: 'Source environment identifier forwarded to quaveone preview create --from'
+    required: false
+    default: ""
+  ttl-hours:
+    description: 'Required absolute preview TTL in hours when preview=true'
+    required: false
+    default: ""
+  idle-hours:
+    description: 'Optional idle timeout in hours forwarded to quaveone preview create --idle-hours'
+    required: false
+    default: ""
+  delete-on-pr-close:
+    description: 'When true and the pull request is closed, run quaveone preview delete --env instead of creating/deploying'
+    required: false
+    default: "false"
+  prevent-destroy:
+    description: 'When true, create the preview with Prevent destroy enabled'
+    required: false
+    default: "false"
   api-cli-uri:
     description: 'Custom API URL for full private region deployments'
     required: false
     default: ""
   cli-extra-args:
-    description: 'CLI extra arguments.'
+    description: 'Additional quaveone deploy arguments, such as --env-var, --command, --arg, --working-dir, --wait, or --clear-command.'
     required: false
 runs:
   using: 'docker'
-  image: docker://quaveone/quaveone-cli:1.0.37
+  image: docker://quaveone/quaveone-cli:1.0.38
   env:
     QUAVEONE_USER_TOKEN: ${{ inputs.user-token }}
     QUAVEONE_ENV_TOKEN: ${{ inputs.env-token }}
@@ -48,8 +72,35 @@ runs:
     QUAVEONE_IMAGE: ${{ inputs.image }}
     QUAVEONE_APP_SLUG: ${{ inputs.app }}
     QUAVEONE_COPY_ENV_VARS_FROM: ${{ inputs.copy-env-vars-from }}
+    QUAVEONE_PREVIEW: ${{ inputs.preview }}
+    QUAVEONE_PREVIEW_FROM: ${{ inputs.from }}
+    QUAVEONE_PREVIEW_TTL_HOURS: ${{ inputs.ttl-hours }}
+    QUAVEONE_PREVIEW_IDLE_HOURS: ${{ inputs.idle-hours }}
+    QUAVEONE_PREVIEW_DELETE_ON_PR_CLOSE: ${{ inputs.delete-on-pr-close }}
+    QUAVEONE_PREVIEW_PREVENT_DESTROY: ${{ inputs.prevent-destroy }}
     QUAVEONE_API_CLI_URI: ${{ inputs.api-cli-uri }}
   entrypoint: sh
   args:
     - -c
-    - 'quaveone deploy ${{ inputs.cli-extra-args }}'
+    - |
+      if [ "$QUAVEONE_PREVIEW" = "true" ]; then
+        EVENT_ACTION=""
+        if [ -n "${GITHUB_EVENT_PATH:-}" ] && [ -r "$GITHUB_EVENT_PATH" ]; then
+          EVENT_ACTION="$(sed -n 's/.*"action"[[:space:]]*:[[:space:]]*"\([^"]*\)".*/\1/p' "$GITHUB_EVENT_PATH" | head -n 1)"
+        fi
+
+        if [ "$QUAVEONE_PREVIEW_DELETE_ON_PR_CLOSE" = "true" ] && [ "${GITHUB_EVENT_NAME:-}" = "pull_request" ] && [ "$EVENT_ACTION" = "closed" ]; then
+          quaveone preview delete --env "$QUAVEONE_ENV_NAME"
+          exit $?
+        fi
+
+        BRANCH="${GITHUB_HEAD_REF:-$GITHUB_REF_NAME}"
+        set -- preview create --app "$QUAVEONE_APP_SLUG" --from "$QUAVEONE_PREVIEW_FROM" --branch "$BRANCH" --ttl-hours "$QUAVEONE_PREVIEW_TTL_HOURS"
+        if [ -n "$QUAVEONE_ENV_NAME" ]; then set -- "$@" --env "$QUAVEONE_ENV_NAME"; fi
+        if [ -n "$QUAVEONE_PREVIEW_IDLE_HOURS" ]; then set -- "$@" --idle-hours "$QUAVEONE_PREVIEW_IDLE_HOURS"; fi
+        if [ "$QUAVEONE_PREVIEW_PREVENT_DESTROY" = "true" ]; then set -- "$@" --prevent-destroy; fi
+        quaveone "$@" ${{ inputs.cli-extra-args }}
+        exit $?
+      fi
+
+      quaveone deploy ${{ inputs.cli-extra-args }}
