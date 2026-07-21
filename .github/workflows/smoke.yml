@@ -1,0 +1,53 @@
+name: Smoke Deploy Action
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  action-main-loads:
+    name: Action main loads
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Guard Docker action metadata contexts
+        run: |
+          if grep -En '\$\{\{ *(github|env)\.' action.yml; then
+            echo "Do not use runner contexts in Docker action metadata; parse runner env inside the container script instead."
+            exit 1
+          fi
+
+      - name: Local action reaches CLI
+        id: local_deploy
+        continue-on-error: true
+        uses: ./
+        with:
+          env: smoke-env
+
+      - name: Assert local action failed only after loading
+        if: ${{ steps.local_deploy.outcome != 'failure' }}
+        run: |
+          echo "Expected local smoke to fail because credentials are intentionally absent."
+          echo "Actual outcome: ${{ steps.local_deploy.outcome }}"
+          exit 1
+
+      - name: Published main action reaches CLI
+        id: main_deploy
+        continue-on-error: true
+        uses: quaveone/quaveone-deploy-action@main
+        with:
+          env: smoke-env
+
+      - name: Assert published main action failed only after loading
+        if: ${{ steps.main_deploy.outcome != 'failure' }}
+        run: |
+          echo "Expected published main smoke to fail because credentials are intentionally absent."
+          echo "Actual outcome: ${{ steps.main_deploy.outcome }}"
+          exit 1
