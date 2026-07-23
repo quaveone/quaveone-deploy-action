@@ -3,6 +3,8 @@
 This action deploys source code or container images to
 [Quave ONE](https://www.quave.one).
 
+The action is non-interactive and token-based. It passes inputs to the Quave ONE CLI through `QUAVEONE_*` environment variables and does not use local `quaveone login` config. Keep product behavior in zcloud public API/CLI paths; do not duplicate deploy or preview logic in the action.
+
 ## Inputs
 
 ## `user-token`
@@ -46,7 +48,7 @@ This action deploys source code or container images to
 
 ## Branch preview inputs
 
-Set `preview: "true"` to run `quaveone preview create` instead of `quaveone deploy`. The Action derives the preview branch from `GITHUB_HEAD_REF` or `GITHUB_REF_NAME`.
+Set `preview: "true"` to run `quaveone preview create` instead of `quaveone deploy`. The Action derives the preview branch from `GITHUB_HEAD_REF` or `GITHUB_REF_NAME`. Preview URLs and hosts/domains printed by the CLI appear in workflow logs; pass `cli-extra-args: "--output json"` when a follow-up script needs machine-readable preview output.
 
 | Input | Required when `preview=true` | Description |
 | --- | --- | --- |
