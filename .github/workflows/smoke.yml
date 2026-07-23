@@ -2,6 +2,7 @@ name: Smoke Deploy Action
 
 on:
   pull_request:
+    types: [opened, synchronize, reopened, closed]
   push:
     branches:
       - main
@@ -57,6 +58,23 @@ jobs:
         run: |
           echo "Expected local preview smoke to fail because credentials are intentionally absent."
           echo "Actual outcome: ${{ steps.local_preview.outcome }}"
+          exit 1
+
+      - name: Local preview delete path reaches CLI
+        if: ${{ github.event_name == 'pull_request' && github.event.action == 'closed' }}
+        id: local_preview_delete
+        continue-on-error: true
+        uses: ./
+        with:
+          preview: "true"
+          delete-on-pr-close: "true"
+          env: preview-smoke
+
+      - name: Assert local preview delete failed only after action loaded
+        if: ${{ github.event_name == 'pull_request' && github.event.action == 'closed' && steps.local_preview_delete.outcome != 'failure' }}
+        run: |
+          echo "Expected local preview delete smoke to fail because credentials are intentionally absent."
+          echo "Actual outcome: ${{ steps.local_preview_delete.outcome }}"
           exit 1
 
   published-main-metadata:
