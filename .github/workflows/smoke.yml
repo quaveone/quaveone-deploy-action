@@ -59,6 +59,29 @@ jobs:
           echo "Actual outcome: ${{ steps.local_preview.outcome }}"
           exit 1
 
+      - name: Write closed pull request event fixture
+        run: |
+          printf '%s\n' '{"action":"closed"}' > "${{ runner.temp }}/closed-pr-event.json"
+
+      - name: Local preview delete path reaches CLI
+        id: local_preview_delete
+        continue-on-error: true
+        uses: ./
+        env:
+          GITHUB_EVENT_NAME: pull_request
+          GITHUB_EVENT_PATH: ${{ runner.temp }}/closed-pr-event.json
+        with:
+          preview: "true"
+          delete-on-pr-close: "true"
+          env: preview-smoke
+
+      - name: Assert local preview delete failed only after action loaded
+        if: ${{ steps.local_preview_delete.outcome != 'failure' }}
+        run: |
+          echo "Expected local preview delete smoke to fail because credentials are intentionally absent."
+          echo "Actual outcome: ${{ steps.local_preview_delete.outcome }}"
+          exit 1
+
   published-main-metadata:
     name: Load published main action metadata
     if: ${{ github.event_name != 'pull_request' }}
@@ -96,4 +119,27 @@ jobs:
         run: |
           echo "Expected published main preview smoke to fail because credentials are intentionally absent."
           echo "Actual outcome: ${{ steps.main_preview.outcome }}"
+          exit 1
+
+      - name: Write closed pull request event fixture for published main
+        run: |
+          printf '%s\n' '{"action":"closed"}' > "${{ runner.temp }}/closed-pr-event.json"
+
+      - name: Published main preview delete path reaches CLI
+        id: main_preview_delete
+        continue-on-error: true
+        uses: quaveone/quaveone-deploy-action@main
+        env:
+          GITHUB_EVENT_NAME: pull_request
+          GITHUB_EVENT_PATH: ${{ runner.temp }}/closed-pr-event.json
+        with:
+          preview: "true"
+          delete-on-pr-close: "true"
+          env: preview-smoke
+
+      - name: Assert published main preview delete failed only after action loaded
+        if: ${{ steps.main_preview_delete.outcome != 'failure' }}
+        run: |
+          echo "Expected published main preview delete smoke to fail because credentials are intentionally absent."
+          echo "Actual outcome: ${{ steps.main_preview_delete.outcome }}"
           exit 1
