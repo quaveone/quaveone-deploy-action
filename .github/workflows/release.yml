@@ -4,11 +4,11 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: "CLI/action version to publish, for example v1.0.39 or 1.0.39"
+        description: "Deploy-action version to publish, for example v1.0.45 or 1.0.45"
         required: true
         type: string
       promotion_confirmation:
-        description: "Required. Enter tested-vX.Y.Z only after the fixed-ref action candidate passed smoke tests."
+        description: "Required. Enter tested-action-vX.Y.Z only after the fixed-ref and published-main action smoke tests passed."
         required: true
         type: string
 
@@ -24,7 +24,7 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Update action image, tag, and latest release
+      - name: Tag current action and mark release latest
         env:
           GH_TOKEN: ${{ github.token }}
           INPUT_VERSION: ${{ inputs.version }}
@@ -37,50 +37,36 @@ jobs:
             v*) TAG="$VERSION"; VERSION_NUMBER="${VERSION#v}" ;;
             *) VERSION_NUMBER="$VERSION"; TAG="v${VERSION}" ;;
           esac
-          export VERSION_NUMBER
 
           if [[ ! "$VERSION_NUMBER" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$ ]]; then
             echo "::error::Version must look like vX.Y.Z or X.Y.Z; got $INPUT_VERSION."
             exit 1
           fi
 
-          EXPECTED_CONFIRMATION="tested-${TAG}"
+          EXPECTED_CONFIRMATION="tested-action-${TAG}"
           if [[ "$PROMOTION_CONFIRMATION" != "$EXPECTED_CONFIRMATION" ]]; then
-            echo "::error::This workflow moves customer-facing main/latest aliases. Test the fixed-ref action candidate first, then set promotion_confirmation=${EXPECTED_CONFIRMATION}."
+            echo "::error::This workflow moves the deploy-action Latest release. Test the fixed-ref and published-main action smoke first, then set promotion_confirmation=${EXPECTED_CONFIRMATION}."
             exit 1
           fi
 
-          python3 - <<'PY'
-          import os
-          import re
-          from pathlib import Path
+          ACTION_IMAGE="$(ruby -ryaml -e 'puts YAML.load_file("action.yml").dig("runs", "image")')"
+          if [[ "$ACTION_IMAGE" != "docker://quaveone/quaveone-cli:latest" ]]; then
+            echo "::error::Deploy action runs.image must be docker://quaveone/quaveone-cli:latest. CLI versions are promoted in quaveone-client-utils; got ${ACTION_IMAGE}."
+            exit 1
+          fi
 
-          version = os.environ["VERSION_NUMBER"]
-          path = Path("action.yml")
-          text = path.read_text()
-          new_text, count = re.subn(
-              r"docker://quaveone/quaveone-cli:[0-9]+\.[0-9]+\.[0-9]+(?:-[0-9A-Za-z.-]+)?",
-              f"docker://quaveone/quaveone-cli:{version}",
-              text,
-          )
-          if count != 1:
-              raise SystemExit(f"Expected exactly one CLI image reference in action.yml, replaced {count}")
-          path.write_text(new_text)
-          PY
-
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-
-          if ! git diff --quiet -- action.yml; then
-            git add action.yml
-            git commit -m "Use Quave ONE CLI ${VERSION_NUMBER}"
-            git push origin HEAD:main
-          else
-            echo "action.yml already uses Quave ONE CLI ${VERSION_NUMBER}"
+          git fetch origin main --tags
+          if [[ "$GITHUB_REF" != "refs/heads/main" ]]; then
+            echo "::error::Release deploy-action tags only from main after the published-main smoke passes; current ref is ${GITHUB_REF}."
+            exit 1
           fi
 
           HEAD_SHA="$(git rev-parse HEAD)"
-          git fetch origin main --tags
+          MAIN_SHA="$(git rev-parse origin/main)"
+          if [[ "$HEAD_SHA" != "$MAIN_SHA" ]]; then
+            echo "::error::Checked out SHA ${HEAD_SHA} does not match origin/main ${MAIN_SHA}. Dispatch this workflow from the current main commit after smoke passes."
+            exit 1
+          fi
 
           if git rev-parse "$TAG" >/dev/null 2>&1; then
             EXISTING_SHA="$(git rev-list -n 1 "$TAG")"
@@ -94,9 +80,9 @@ jobs:
           fi
 
           cat > /tmp/deploy-action-release-notes.md <<EOF_NOTES
-          Uses Quave ONE CLI ${VERSION_NUMBER}.
+          Quave ONE deploy action ${TAG}.
 
-          CLI release: https://github.com/quaveone/cli/releases/tag/${TAG}
+          This action uses docker://quaveone/quaveone-cli:latest. CLI runtime versions are promoted by the Quave ONE CLI release workflow after fixed-version smoke tests pass.
           EOF_NOTES
 
           if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then

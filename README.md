@@ -122,15 +122,15 @@ image's `ENTRYPOINT`, `CMD`, and working directory.
 
 ## Release process
 
-Customer examples use `quaveone/quaveone-deploy-action@main`, so the `main` branch is a customer-facing alias and must point only at a fixed CLI image that passed action smoke. Do not retarget/tag this action for every CLI release automatically. Retarget it only when action users need the CLI change (for example deploy/preview/`--wait` behavior or logs), or when `action.yml`/wrapper behavior changed.
+Customer examples use `quaveone/quaveone-deploy-action@main`, and this action runs `docker://quaveone/quaveone-cli:latest`. CLI releases reach action users when the CLI release workflow promotes the tested Docker image to `quaveone/quaveone-cli:latest`; the action should not be retargeted or released for every CLI version.
 
-When a CLI release should reach action users, first test a fixed action candidate branch/SHA with `action.yml` pointing at the target `docker://quaveone/quaveone-cli:X.Y.Z`. After that fixed-ref smoke passes, merge/update `main`, run the published `@main` smoke, and only then mark the matching action release Latest.
+Treat the CLI `latest` alias as customer-facing: publish a fixed CLI version first, smoke-test the exact asset/image, then promote CLI/Docker `latest`. When a CLI change affects action users (for example deploy/preview/`--wait` behavior or logs), run this repository's `Smoke Deploy Action` workflow on `main` after the CLI promotion so the published `uses: quaveone/quaveone-deploy-action@main` path proves it loads the promoted CLI.
 
-For manual repair or a standalone action release after fixed-ref smoke, run this repository's **Release Deploy Action** workflow:
+Create a deploy-action PR/release only when `action.yml`, inputs, wrapper shell, or action docs changed. For manual repair or a standalone action release after the fixed-ref and published-main smoke tests pass, run this repository's **Release Deploy Action** workflow:
 
 ```shell
 gh workflow run release.yml --repo quaveone/quaveone-deploy-action --ref main \
-  -f version=v1.0.35 -f promotion_confirmation=tested-v1.0.35
+  -f version=v1.0.45 -f promotion_confirmation=tested-action-v1.0.45
 ```
 
-The workflow updates `action.yml`, pushes `main`, creates the matching tag, and marks the matching GitHub Release as **Latest**. Use it only after the fixed candidate passed; AI agents should follow `.agents/skills/release-deploy-action/SKILL.md` before declaring the action release complete.
+The workflow tags the already-tested `main` commit and marks the matching GitHub Release as **Latest**. It does not change the CLI Docker image; action runtime follows the promoted `quaveone/quaveone-cli:latest` image. AI agents should follow `.agents/skills/release-deploy-action/SKILL.md` before declaring an action release complete.
