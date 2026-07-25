@@ -122,14 +122,15 @@ image's `ENTRYPOINT`, `CMD`, and working directory.
 
 ## Release process
 
-Customer examples use `quaveone/quaveone-deploy-action@main`, so the `main` branch must always use the latest stable Quave ONE CLI Docker image.
+Customer examples use `quaveone/quaveone-deploy-action@main`, so the `main` branch is a customer-facing alias and must point only at a fixed CLI image that passed action smoke. Do not retarget/tag this action for every CLI release automatically. Retarget it only when action users need the CLI change (for example deploy/preview/`--wait` behavior or logs), or when `action.yml`/wrapper behavior changed.
 
-The normal path is automatic: the `quaveone/quaveone-client-utils` Release workflow updates this repo after a stable CLI release when `publish_docker=true` and `set_latest=true`.
+When a CLI release should reach action users, first test a fixed action candidate branch/SHA with `action.yml` pointing at the target `docker://quaveone/quaveone-cli:X.Y.Z`. After that fixed-ref smoke passes, merge/update `main`, run the published `@main` smoke, and only then mark the matching action release Latest.
 
-For manual repair or a standalone action release, run this repository's **Release Deploy Action** workflow:
+For manual repair or a standalone action release after fixed-ref smoke, run this repository's **Release Deploy Action** workflow:
 
 ```shell
-gh workflow run release.yml --repo quaveone/quaveone-deploy-action --ref main -f version=v1.0.35
+gh workflow run release.yml --repo quaveone/quaveone-deploy-action --ref main \
+  -f version=v1.0.35 -f promotion_confirmation=tested-v1.0.35
 ```
 
-The workflow updates `action.yml`, pushes `main`, creates the matching tag, and marks the matching GitHub Release as **Latest**. AI agents should follow `.agents/skills/release-deploy-action/SKILL.md` before declaring the action release complete.
+The workflow updates `action.yml`, pushes `main`, creates the matching tag, and marks the matching GitHub Release as **Latest**. Use it only after the fixed candidate passed; AI agents should follow `.agents/skills/release-deploy-action/SKILL.md` before declaring the action release complete.

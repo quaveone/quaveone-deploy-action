@@ -14,6 +14,8 @@ The action must stay token-based and CI-safe. It should use explicit inputs and 
 
 Deploy-action releases also have two phases: **test a fixed candidate** and **promote customer aliases**. Do not move `main` or mark a release **Latest** until the candidate action has passed the complete smoke in real GitHub Actions by fixed branch, tag, or SHA.
 
+Do **not** release or retarget this action for every CLI release. The action is pinned to a fixed CLI Docker image. Retarget/tag the action only when action users need the new CLI behavior (deploy/preview/`--wait` behavior or logs, token/env handling, action-used flags), or when `action.yml`, inputs, wrapper shell, or action docs changed. For local-CLI-only, installer-only, docs-only, internal-only, or non-action command changes, leave `main` pinned to the previous tested CLI image and do not create a new action release.
+
 Safe promotion order:
 
 1. Prepare the candidate in a branch or other fixed ref with `action.yml` pointing at the target `docker://quaveone/quaveone-cli:<version>`.
@@ -24,7 +26,7 @@ Safe promotion order:
 
 If `main` is broken, first restore it to the last tested-good action version, prove that rollback with smoke, and only then continue fixing the new candidate.
 
-Prefer the automation in `quaveone/quaveone-client-utils` Release workflow only after the CLI version and action candidate were tested by fixed refs. For manual repair or standalone action release, use `.agents/skills/release-deploy-action/SKILL.md`.
+Prefer the automation in `quaveone/quaveone-client-utils` Release workflow with `sync_deploy_action=true` only after deciding action users need the CLI release and the action candidate was tested by fixed ref. For manual repair or standalone action release, use `.agents/skills/release-deploy-action/SKILL.md`.
 
 ## Action metadata safety
 
