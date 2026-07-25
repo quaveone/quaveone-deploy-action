@@ -1,10 +1,12 @@
 ---
 name: release-deploy-action
-description: Release or repair quaveone/quaveone-deploy-action so its main branch, action.yml Docker image, Git tag, and GitHub Latest release match the latest Quave ONE CLI version. Use when publishing a deploy action release, syncing the action after a CLI release, or fixing stale main/latest markers.
+description: Release or repair quaveone/quaveone-deploy-action so its main branch, action.yml Docker image, Git tag, and GitHub Latest release match the selected Quave ONE CLI version. Use when publishing a deploy action release, intentionally syncing the action after a CLI release, or fixing stale main/latest markers.
 ---
 # Release Deploy Action
 
 Use this workflow when the Quave ONE CLI version changes and the deploy action must point to the new CLI image. The action's `main` branch is a customer-facing alias, so it must only move after a fixed candidate has passed smoke tests in real GitHub Actions. The GitHub Release **Latest** marker must only move after the published `@main` smoke passes.
+
+Do **not** release or retarget the deploy action for every CLI release. Retarget only when action users need the new CLI behavior or logs, such as deploy/preview/Job/`--wait` changes, token/env precedence, flags used by `action.yml`, or when action metadata/wrapper/docs changed. Skip action release for local-CLI-only, installer-only, docs-only, internal-only, or non-action command changes; in that case action `main` remains pinned to the previous tested CLI image.
 
 ## Golden rule: test fixed candidate before moving main/latest
 
@@ -44,7 +46,7 @@ The safest path is a PR-based promotion:
 7. Wait for `Smoke Deploy Action` on `main` to pass, including the published-main job.
 8. Create or update release `vX.Y.Z` and mark it **Latest**.
 
-The `quaveone/quaveone-client-utils` release workflow and this repo's manual **Release Deploy Action** workflow are promotion tools. Do not run them against an untested candidate. When a workflow asks for `promotion_confirmation`, enter `tested-vX.Y.Z` only after the fixed-ref smoke has passed.
+The `quaveone/quaveone-client-utils` release workflow with `sync_deploy_action=true` and this repo's manual **Release Deploy Action** workflow are promotion tools. Do not run them against an untested candidate. When a workflow asks for `promotion_confirmation`, enter `tested-vX.Y.Z` only after the fixed-ref smoke has passed.
 
 ## Manual workflow dispatch
 
