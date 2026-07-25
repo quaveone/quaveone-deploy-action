@@ -6,6 +6,10 @@ description: Release or repair quaveone/quaveone-deploy-action when action metad
 
 Use this workflow when the deploy action itself changes: `action.yml`, inputs, wrapper shell behavior, documentation, the `main` branch pointer, tags, or the GitHub Release **Latest** marker. The action intentionally runs `docker://quaveone/quaveone-cli:latest`, so ordinary CLI releases reach action users through the CLI Docker `latest` promotion and do **not** require a deploy-action release.
 
+## Issue tracking before release changes
+
+Before an AI agent modifies `action.yml`, wrapper behavior, workflows, public README/docs, or release automation, create or reuse an issue in `quaveone/quaveone-deploy-action` using `.agents/skills/create-issue/SKILL.md`. Add it to the Quave ONE project, set current iteration, assign `@me`, and move it to **In Development** when implementation starts. A pure release/promotion run that only executes an already-reviewed action release may use the originating implementation/release issue; if no issue exists and the agent will change files, create one first.
+
 ## Golden rule: CLI latest is the runtime handoff
 
 Customers use `quaveone/quaveone-deploy-action@main`. The action metadata should stay stable and reference the promoted CLI alias:

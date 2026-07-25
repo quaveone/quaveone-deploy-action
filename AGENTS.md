@@ -4,6 +4,16 @@
 
 This repository is the public Quave ONE deploy GitHub Action. Customer examples use `quaveone/quaveone-deploy-action@main`, so `main` is a customer-facing alias and must only point at a version that has already been tested.
 
+## Mandatory issue-first workflow for code and public docs
+
+Before an AI agent modifies code, tests, scripts, workflows, configuration, generated files, release automation, public docs, README customer instructions, examples, changelogs that customers read, or any customer-facing artifact in any Quave ONE related repo, it must create or reuse a GitHub issue first. This is mandatory for bugs, features, refactors, chores, public documentation, and release/action changes. The issue ID must exist before commits so every change can be tracked over time.
+
+Exception: no GitHub issue is required for internal-only AI-agent documentation and workflow-maintenance changes, such as `AGENTS.md`, `CLAUDE.md`, `.agents/skills/**`, `.claude/skills/**`, `.cursor/**`, repo-local `.ai/**`, or internal AI docs, as long as the branch does not also change product code, tests, workflows, config, public docs, or customer-facing files.
+
+For work the AI agent will implement immediately, use `.agents/skills/create-issue/SKILL.md` before editing, create the issue in the repo whose files will change, add it to the Quave ONE project (`https://github.com/orgs/zcloud-ws/projects/1`), assign it to the current logged-in GitHub user (`gh api user --jq .login`), set the current project iteration, and move it to **In Development**. This applies equally to `zcloud-ws/zcloud`, `zcloud-ws/zcloud-infra`, `quaveone/quaveone-client-utils`, `quaveone/cli`, and `quaveone/quaveone-deploy-action`; do not create a zcloud issue for a change that will be committed in another repo. GitHub Projects accepts issue URLs from other organizations, so cross-org `quaveone/*` issues should still be added to the shared `zcloud-ws` Quave ONE project instead of moving repos or duplicating issues.
+
+Canonical policy lives in `zcloud-ws/zcloud` at `internal-docs/ai/issue-first-workflow.md`. When this workflow changes, update zcloud first and mirror the concise `AGENTS.md` rule plus `.agents/skills/create-issue` / `.agents/skills/implement-issue` to the Quave ONE related repos.
+
 ## Shared product behavior
 
 This action is a thin non-interactive wrapper around the Quave ONE CLI. Do not duplicate deploy, preview, JobRun, account, or environment product logic in `action.yml` or shell snippets. Pass inputs to the CLI and let the CLI call zcloud public API endpoints that reuse app/server validation, permission, service, formatter, and audit logic. If the action needs behavior the CLI does not expose, update the CLI/zcloud API path first instead of adding an action-only product path.
