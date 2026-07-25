@@ -8,6 +8,10 @@ Use this workflow when the Quave ONE CLI version changes and the deploy action m
 
 Do **not** release or retarget the deploy action for every CLI release. Retarget only when action users need the new CLI behavior or logs, such as deploy/preview/Job/`--wait` changes, token/env precedence, flags used by `action.yml`, or when action metadata/wrapper/docs changed. Skip action release for local-CLI-only, installer-only, docs-only, internal-only, or non-action command changes; in that case action `main` remains pinned to the previous tested CLI image.
 
+## Issue tracking before release changes
+
+Before an AI agent modifies `action.yml`, wrapper behavior, workflows, public README/docs, or release automation, create or reuse an issue in `quaveone/quaveone-deploy-action` using `.agents/skills/create-issue/SKILL.md`. Add it to the Quave ONE project, set current iteration, assign `@me`, and move it to **In Development** when implementation starts. A pure release/promotion run that only executes an already-reviewed action release may use the originating implementation/release issue; if no issue exists and the agent will change files, create one first.
+
 ## Golden rule: test fixed candidate before moving main/latest
 
 Customers use `quaveone/quaveone-deploy-action@main`. Treat `main` exactly like Docker `latest`: mutable, customer-facing, and dangerous if untested.
