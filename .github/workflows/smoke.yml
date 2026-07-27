@@ -29,6 +29,8 @@ jobs:
       - name: Assert preview uses the single CLI flow
         run: |
           grep -F 'set -- preview deploy' action.yml
+          grep -F 'PREVIEW_APP="$QUAVEONE_APP_SLUG"' action.yml
+          grep -F 'unset QUAVEONE_APP_SLUG' action.yml
           grep -F 'set -- "$@" --dir "$QUAVEONE_SRC_DIR"' action.yml
           grep -F 'set -- "$@" --commit-sha "$QUAVEONE_PREVIEW_COMMIT_SHA"' action.yml
 

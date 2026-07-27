@@ -101,7 +101,9 @@ runs:
         fi
 
         BRANCH="${GITHUB_HEAD_REF:-$GITHUB_REF_NAME}"
-        set -- preview deploy --app "$QUAVEONE_APP_SLUG" --from "$QUAVEONE_PREVIEW_FROM" --branch "$BRANCH" --ttl-hours "$QUAVEONE_PREVIEW_TTL_HOURS"
+        PREVIEW_APP="$QUAVEONE_APP_SLUG"
+        unset QUAVEONE_APP_SLUG
+        set -- preview deploy --app "$PREVIEW_APP" --from "$QUAVEONE_PREVIEW_FROM" --branch "$BRANCH" --ttl-hours "$QUAVEONE_PREVIEW_TTL_HOURS"
         if [ -n "$QUAVEONE_SRC_DIR" ]; then set -- "$@" --dir "$QUAVEONE_SRC_DIR"; fi
         if [ -n "$QUAVEONE_PREVIEW_IDLE_HOURS" ]; then set -- "$@" --idle-hours "$QUAVEONE_PREVIEW_IDLE_HOURS"; fi
         if [ -n "$QUAVEONE_PREVIEW_COMMIT_SHA" ]; then set -- "$@" --commit-sha "$QUAVEONE_PREVIEW_COMMIT_SHA"; fi
