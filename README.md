@@ -42,22 +42,25 @@ The action is non-interactive and token-based. It passes inputs to the Quave ONE
 ## `cli-extra-args`
 
 **Optional** Additional `quaveone deploy` arguments, including repeatable
-`--env-var` and `--arg` values, startup command overrides, wait options, and
-`--clear-command`.
+`--arg` values, startup command overrides, wait options, and `--clear-command`.
+Do not pass application environment variables through GitHub Actions; configure
+them persistently through Quave ONE before deploying.
 
 
 ## Branch preview inputs
 
-Set `preview: "true"` to run `quaveone preview create` instead of `quaveone deploy`. The Action derives the preview branch from `GITHUB_HEAD_REF` or `GITHUB_REF_NAME`. Preview URLs and hosts/domains printed by the CLI appear in workflow logs; pass `cli-extra-args: "--output json"` when a follow-up script needs machine-readable preview output.
+Set `preview: "true"` to run the single `quaveone preview deploy` command. It creates or reuses the preview for the source environment and branch, then deploys the checked-out source; it also forwards `dir` for monorepos. The Action derives the branch from `GITHUB_HEAD_REF` or `GITHUB_REF_NAME`. Preview URLs and deployment output appear in workflow logs.
 
 | Input | Required when `preview=true` | Description |
 | --- | --- | --- |
+| `env` | No | Not used while creating/deploying a preview. For `delete-on-pr-close`, supply the exact CLI preview name printed by an earlier preview deployment. It remains required for a normal deployment. |
 | `app` | Yes | App slug/name/id resolved by the CLI. |
 | `from` | Yes | Source env appEnvId, cliEnvName, or display name scoped to the app. |
 | `ttl-hours` | Yes | Absolute preview TTL in hours. |
 | `idle-hours` | No | Idle timeout in hours. |
+| `commit-sha` | No | Source commit SHA stored in the preview metadata. |
 | `prevent-destroy` | No | Create the preview with Prevent destroy enabled. |
-| `delete-on-pr-close` | No | On a closed pull request, call `quaveone preview delete --env`. Use `env` as the stable preview env name/delete target. |
+| `delete-on-pr-close` | No | On a closed pull request, call `quaveone preview delete --env`. `env` must be the exact CLI preview name printed by an earlier preview deployment; otherwise rely on the required TTL cleanup. |
 
 Example:
 
@@ -65,13 +68,14 @@ Example:
 uses: quaveone/quaveone-deploy-action@main
 with:
   user-token: ${{ secrets.QUAVEONE_USER_TOKEN }}
-  env: preview-${{ github.event.pull_request.number }}
   app: my-app
   preview: "true"
   from: production
   ttl-hours: "8"
   idle-hours: "2"
-  delete-on-pr-close: "true"
+  commit-sha: ${{ github.sha }}
+  dir: website/
+  cli-extra-args: "--wait"
 ```
 
 ## Example usage
@@ -82,7 +86,7 @@ with:
   user-token: USER_TOKEN
   env: ENV_NAME
   dir: app1
-  cli-extra-args: "--env-var ENV1=VAL1 --env-var ENV2=VAL2"
+  cli-extra-args: "--wait"
 ```
 
 The same image can run a different long-lived process without an entrypoint

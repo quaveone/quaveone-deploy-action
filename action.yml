@@ -12,8 +12,9 @@ inputs:
     description: 'Token to authenticate the app environment'
     required: false
   env:
-    description: 'Environment name to create, update, or use as the preview name/delete target'
-    required: true
+    description: 'Environment name for a normal deploy; when preview deletion is requested, the exact CLI preview name to delete'
+    required: false
+    default: ""
   dir:
     description: 'Directory usage as the source code to send to deploy (Optional, default value is current dir)'
     required: false
@@ -31,11 +32,11 @@ inputs:
     required: false
     default: ""
   preview:
-    description: 'When true, run quaveone preview create instead of quaveone deploy'
+    description: 'When true, run quaveone preview deploy to create or reuse a branch preview and deploy source'
     required: false
     default: "false"
   from:
-    description: 'Source environment identifier forwarded to quaveone preview create --from'
+    description: 'Source environment identifier forwarded to quaveone preview deploy --from'
     required: false
     default: ""
   ttl-hours:
@@ -43,7 +44,11 @@ inputs:
     required: false
     default: ""
   idle-hours:
-    description: 'Optional idle timeout in hours forwarded to quaveone preview create --idle-hours'
+    description: 'Optional idle timeout in hours forwarded to quaveone preview deploy --idle-hours'
+    required: false
+    default: ""
+  commit-sha:
+    description: 'Optional source commit SHA recorded in branch preview metadata'
     required: false
     default: ""
   delete-on-pr-close:
@@ -59,7 +64,7 @@ inputs:
     required: false
     default: ""
   cli-extra-args:
-    description: 'Additional quaveone deploy arguments, such as --env-var, --command, --arg, --working-dir, --wait, or --clear-command.'
+    description: 'Additional quaveone deploy or preview deploy arguments, such as --command, --arg, --working-dir, --wait, or --clear-command. Do not pass app environment variables from GitHub Actions.'
     required: false
 runs:
   using: 'docker'
@@ -76,6 +81,7 @@ runs:
     QUAVEONE_PREVIEW_FROM: ${{ inputs.from }}
     QUAVEONE_PREVIEW_TTL_HOURS: ${{ inputs.ttl-hours }}
     QUAVEONE_PREVIEW_IDLE_HOURS: ${{ inputs.idle-hours }}
+    QUAVEONE_PREVIEW_COMMIT_SHA: ${{ inputs.commit-sha }}
     QUAVEONE_PREVIEW_DELETE_ON_PR_CLOSE: ${{ inputs.delete-on-pr-close }}
     QUAVEONE_PREVIEW_PREVENT_DESTROY: ${{ inputs.prevent-destroy }}
     QUAVEONE_API_CLI_URI: ${{ inputs.api-cli-uri }}
@@ -95,9 +101,10 @@ runs:
         fi
 
         BRANCH="${GITHUB_HEAD_REF:-$GITHUB_REF_NAME}"
-        set -- preview create --app "$QUAVEONE_APP_SLUG" --from "$QUAVEONE_PREVIEW_FROM" --branch "$BRANCH" --ttl-hours "$QUAVEONE_PREVIEW_TTL_HOURS"
-        if [ -n "$QUAVEONE_ENV_NAME" ]; then set -- "$@" --env "$QUAVEONE_ENV_NAME"; fi
+        set -- preview deploy --app "$QUAVEONE_APP_SLUG" --from "$QUAVEONE_PREVIEW_FROM" --branch "$BRANCH" --ttl-hours "$QUAVEONE_PREVIEW_TTL_HOURS"
+        if [ -n "$QUAVEONE_SRC_DIR" ]; then set -- "$@" --dir "$QUAVEONE_SRC_DIR"; fi
         if [ -n "$QUAVEONE_PREVIEW_IDLE_HOURS" ]; then set -- "$@" --idle-hours "$QUAVEONE_PREVIEW_IDLE_HOURS"; fi
+        if [ -n "$QUAVEONE_PREVIEW_COMMIT_SHA" ]; then set -- "$@" --commit-sha "$QUAVEONE_PREVIEW_COMMIT_SHA"; fi
         if [ "$QUAVEONE_PREVIEW_PREVENT_DESTROY" = "true" ]; then set -- "$@" --prevent-destroy; fi
         quaveone "$@" ${{ inputs.cli-extra-args }}
         exit $?
