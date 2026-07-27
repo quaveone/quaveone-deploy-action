@@ -26,6 +26,12 @@ jobs:
             exit 1
           fi
 
+      - name: Assert preview uses the single CLI flow
+        run: |
+          grep -F 'set -- preview deploy' action.yml
+          grep -F 'set -- "$@" --dir "$QUAVEONE_SRC_DIR"' action.yml
+          grep -F 'set -- "$@" --commit-sha "$QUAVEONE_PREVIEW_COMMIT_SHA"' action.yml
+
       - name: Local deploy path reaches CLI
         id: local_deploy
         continue-on-error: true
