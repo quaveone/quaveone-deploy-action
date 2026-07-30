@@ -13,7 +13,11 @@ Canonical policy lives in `zcloud-ws/zcloud` at `internal-docs/ai/issue-first-wo
 
 ## Mandatory issue-first trigger
 
-Before an AI agent modifies code, tests, scripts, workflows, configuration, generated files, release automation, public docs, README customer instructions, examples, changelogs that customers read, or any other customer-facing artifact in a Quave ONE repo, create or reuse a GitHub issue first. For work the agent will implement immediately, the issue must be:
+Before an AI agent modifies code, tests, scripts, workflows, configuration, generated files, release automation, public docs, README customer instructions, examples, changelogs that customers read, or any other customer-facing artifact in a Quave ONE repo, create or reuse a GitHub issue first.
+
+**Reuse the parent issue for sub-tasks.** If the requested work is part of a task an existing issue already tracks — an autoreview finding on that issue's PR, a follow-up discovered during its implementation, or a refinement of its acceptance criteria — do **not** create a new issue: add execution-checklist lines to the parent issue and implement under the parent's branch/PR. Create a separate issue only for genuinely separable work, or when the parent issue is already Done/closed.
+
+For work the agent will implement immediately, the issue must be:
 
 - in the repo whose files will change;
 - added to the Quave ONE project;

@@ -21,7 +21,7 @@ Only internal AI-agent documentation/workflow-maintenance changes are exempt (`A
 2. **The issue body is the tracker.** Update checklist lines as work progresses. Comments are for detail and evidence, not status.
 3. **Preserve the original issue.** Do not rewrite the user's problem statement away. Append or update the execution section.
 4. **Work item by item.** Mark the current line `(IN PROGRESS)`, implement it, run focused proof, review it, then mark it done or blocked.
-5. **Do not silently expand scope.** If required work is discovered, add a checklist line. If it is separable, create or propose a follow-up issue.
+5. **Do not silently expand scope — and do not fork sub-tasks into new issues.** When required work is discovered during implementation (including review findings on this issue's PR), add a checklist line to this issue and implement it here; a sub-task of the current task never gets its own issue. Create or propose a follow-up issue only for genuinely separable work that can ship independently, or work picked up after this issue is Done.
 6. **Every done code/public-doc item needs proof.** Use focused tests, compile checks, lint, rendered docs checks, action smoke, UI screenshots, or clear manual verification notes.
 7. **Use issue-linked commit messages.** Commit subjects must be `#<number> <issue title>` plus `- ` body bullets for the specific changes in that commit.
 8. **Keep Quave ONE project status in sync automatically.** Move the issue to **In Development** when implementation starts, **In Review** when the PR opens, **In Staging** when staging verification begins, **Ready to Prod** when staging passes, and **Done** when production/main is shipped and verified.
