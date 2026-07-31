@@ -5,11 +5,11 @@ description: Create or project-track GitHub issues for Quave ONE repositories an
 
 # Create Issue
 
-Create a GitHub issue in the repository whose files will change, then add that issue to the shared **Quave ONE** project board at `https://github.com/orgs/zcloud-ws/projects/1`.
+Create a GitHub issue in the repository whose files will change, then add that issue to the shared **Quave ONE** project board at `https://github.com/orgs/quaveone/projects/3`.
 
 Canonical policy lives in `zcloud-ws/zcloud` at `internal-docs/ai/issue-first-workflow.md`; this repo mirrors the commands needed to follow it locally.
 
-> **Important:** The issue belongs in the target repo (`zcloud-ws/zcloud`, `zcloud-ws/zcloud-infra`, `quaveone/quaveone-client-utils`, `quaveone/cli`, or `quaveone/quaveone-deploy-action`). Do not create a `zcloud-ws/zcloud` issue for a change that will be committed in another repo. Always add the resulting issue URL to the single Quave ONE project (`zcloud-ws`, project number `1`). GitHub Projects accepts issue URLs from other organizations, so `quaveone/*` issues can still be tracked there without moving repos.
+> **Important:** The issue belongs in the target repo (`zcloud-ws/zcloud`, `zcloud-ws/zcloud-infra`, `quaveone/quaveone-client-utils`, `quaveone/cli`, or `quaveone/quaveone-deploy-action`). Do not create a `zcloud-ws/zcloud` issue for a change that will be committed in another repo. Always add the resulting issue URL to the single Quave ONE project (`quaveone`, project number `3`). GitHub Projects accepts issue URLs from other organizations, so `zcloud-ws/*` issues can still be tracked there without moving repos.
 
 ## Mandatory issue-first trigger
 
@@ -76,13 +76,13 @@ Adapt the checklist to the issue. Remove irrelevant items and add concrete steps
 
 | Resource | Value |
 | --- | --- |
-| Project owner | `zcloud-ws` |
+| Project owner | `quaveone` |
 | Project name | Quave ONE |
-| Project number | `1` |
-| Project URL | `https://github.com/orgs/zcloud-ws/projects/1` |
-| Project node ID | `PVT_kwDOBuBy984AG9bb` |
-| Status field ID | `PVTSSF_lADOBuBy984AG9bbzgEAtVY` |
-| Iteration field ID | `PVTIF_lADOBuBy984AG9bbzhSEQ0g` |
+| Project number | `3` |
+| Project URL | `https://github.com/orgs/quaveone/projects/3` |
+| Project node ID | `PVT_kwDODx0MXs4BfBKc` |
+| Status field ID | `PVTSSF_lADODx0MXs4BfBKczhZXJxo` |
+| Iteration field ID | `PVTIF_lADODx0MXs4BfBKczhZXL84` |
 
 ### Status options
 
@@ -121,8 +121,8 @@ Query the current iteration dynamically; do not hardcode a soon-stale iteration 
 ```bash
 TODAY=$(date +%F)
 ITERATION_JSON=$(gh api graphql -f query='query {
-  organization(login: "zcloud-ws") {
-    projectV2(number: 1) {
+  organization(login: "quaveone") {
+    projectV2(number: 3) {
       fields(first: 50) {
         nodes {
           ... on ProjectV2IterationField {
@@ -167,23 +167,23 @@ ISSUE_URL=$(gh issue create --repo "$TARGET_REPO" \
   --body-file "$BODY_FILE" \
   --assignee "@me" | tail -n 1)
 
-ITEM_ID=$(gh project item-add 1 --owner zcloud-ws --url "$ISSUE_URL" \
+ITEM_ID=$(gh project item-add 3 --owner quaveone --url "$ISSUE_URL" \
   --format json --jq .id)
 
 gh api graphql -f query='mutation($itemId: ID!, $optionId: String!) {
   updateProjectV2ItemFieldValue(input: {
-    projectId: "PVT_kwDOBuBy984AG9bb"
+    projectId: "PVT_kwDODx0MXs4BfBKc"
     itemId: $itemId
-    fieldId: "PVTSSF_lADOBuBy984AG9bbzgEAtVY"
+    fieldId: "PVTSSF_lADODx0MXs4BfBKczhZXJxo"
     value: { singleSelectOptionId: $optionId }
   }) { projectV2Item { id } }
 }' -f itemId="$ITEM_ID" -f optionId="$STATUS_OPTION_ID"
 
 gh api graphql -f query='mutation($itemId: ID!, $iterationId: String!) {
   updateProjectV2ItemFieldValue(input: {
-    projectId: "PVT_kwDOBuBy984AG9bb"
+    projectId: "PVT_kwDODx0MXs4BfBKc"
     itemId: $itemId
-    fieldId: "PVTIF_lADOBuBy984AG9bbzhSEQ0g"
+    fieldId: "PVTIF_lADODx0MXs4BfBKczhZXL84"
     value: { iterationId: $iterationId }
   }) { projectV2Item { id } }
 }' -f itemId="$ITEM_ID" -f iterationId="$ITERATION_ID"
@@ -199,11 +199,11 @@ If assignment to `@me` fails in a cross-org repo, create or edit the issue witho
 
 ## Existing issues
 
-For an existing issue, get the issue URL, add it to the project with `gh project item-add 1 --owner zcloud-ws --url "$ISSUE_URL" --format json --jq .id`, then use the same GraphQL mutations above to set status and iteration. If `item-add` reports the item already exists, query the issue's project items and select `project.number == 1`.
+For an existing issue, get the issue URL, add it to the project with `gh project item-add 3 --owner quaveone --url "$ISSUE_URL" --format json --jq .id`, then use the same GraphQL mutations above to set status and iteration. If `item-add` reports the item already exists, query the issue's project items and select `project.number == 1`.
 
 ## Notes
 
-- Add issues only to the Quave ONE project at `https://github.com/orgs/zcloud-ws/projects/1` unless Filipe explicitly says otherwise.
+- Add issues only to the Quave ONE project at `https://github.com/orgs/quaveone/projects/3` unless Filipe explicitly says otherwise.
 - For immediate AI implementation, set **In Development**, current iteration, and `@me` before editing files.
 - Keep issue bodies concise but complete; never omit `## Execution checklist`.
 - If a repo-specific issue template exists, satisfy it and still include `## Execution checklist`.
